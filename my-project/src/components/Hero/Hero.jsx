@@ -1,8 +1,13 @@
 import { IoIosArrowRoundForward } from "react-icons/io";
-import Navbar from "../Navbar/Navbar";
+//import Navbar from "../Navbar/Navbar";
 import blob from "../../assets/blob.svg";
 import hero from "../../assets/hero.png";
 import { motion } from "framer-motion";
+import Services from "../Services/Services";
+import Subscribe from "../Subscribe/Subscribe"
+import Footer from "../Footer/Footer";
+import Banner from "../Banner/Banner"
+import Banner2 from "../Banner/Banner2"
 
 export const FadeUp = (delay) => {
   return {
@@ -26,8 +31,9 @@ export const FadeUp = (delay) => {
 
 const Hero = () => {
   return (
+    <>
     <section className="bg-light overflow-hidden relative">
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="container grid grid-cols-1 md:grid-cols-2 min-h-[650px]">
         {/* Brand Info */}
         <div className="flex flex-col justify-center py-14 md:py-0 relative z-20">
@@ -79,7 +85,15 @@ const Hero = () => {
         </div>
       </div>
     </section>
+    
+ <Services/>
+ <Banner/>
+ <Subscribe/>
+ <Banner2/>
+ <Footer/>
+ </>
   );
+ 
 };
 
 export default Hero;
