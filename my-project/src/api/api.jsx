@@ -17,6 +17,12 @@ const addCourses = (courses) => axiosInstance.post(`${API}/courses/add`, courses
 
 const deleteCourses = (id) => axiosInstance.delete(`${API}/courses/delete/${id}`)
 
+//Notes
+const getNotes = () => axios.get(`${API}/notes`);
+const addNotes = (data) => axiosInstance.post(`${API}/notes/add`, data);
+const editNotes = (data,id)=>axiosInstance.put(`${API}/notes/edit/${id}`,data )
+const deleteNotes = (id) => axiosInstance.delete(`${API}/notes/delete/${id}`);
 export{
-    getCourses, editCourses,addCourses,deleteCourses
+    getCourses, editCourses,addCourses,deleteCourses,
+    getNotes, addNotes, deleteNotes, editNotes
 }

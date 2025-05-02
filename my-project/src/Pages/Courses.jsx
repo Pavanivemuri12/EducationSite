@@ -13,12 +13,12 @@ const CoursesList = () => {
     const [error, setError] = useState(null);
     const [currentVideo, setCurrentVideo] = useState(null);
     const [showThumbnails, setShowThumbnails] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const fetchCourses = async () => {
             try {
                 const response = await getCourses();
-                console.log("Fetched courses:", response);
                 const formattedCourses = Array.isArray(response.data)
                     ? response.data.map(({ courseName, thumbnailUrl, videoUrl, _id }) => ({
                           id: _id,
@@ -38,12 +38,27 @@ const CoursesList = () => {
         fetchCourses();
     }, []);
 
+    const filteredCourses = courses.filter((course) =>
+        course.courseName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     if (loading) return <p>Loading courses...</p>;
     if (error) return <p>{error}</p>;
     if (courses.length === 0) return <p>No courses available.</p>;
 
     return (
         <div className="flex flex-col items-center p-4 bg-gray-100 min-h-screen relative">
+            {/* Search input just below navbar */}
+            <div className="w-3/4 mb-6">
+                <input
+                    type="text"
+                    placeholder="Search courses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+
             {currentVideo && !showThumbnails ? (
                 <div className="w-3/4 mb-4">
                     {currentVideo.includes("drive.google.com") ? (
@@ -63,7 +78,7 @@ const CoursesList = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-3 gap-6 w-3/4">
-                    {courses.map(({ id, courseName, thumbnailUrl, videoUrl }) => (
+                    {filteredCourses.map(({ id, courseName, thumbnailUrl, videoUrl }) => (
                         <div
                             key={id}
                             className="cursor-pointer bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-300 hover:scale-105"
@@ -78,10 +93,16 @@ const CoursesList = () => {
                             </div>
                         </div>
                     ))}
+                    {filteredCourses.length === 0 && (
+                        <p className="text-center text-gray-500 col-span-3">No matching courses found.</p>
+                    )}
                 </div>
             )}
+
             <button
-                className={`fixed bottom-4 right-4 p-3 bg-gray-800 text-white rounded-full shadow-lg z-10 transition-transform ${showThumbnails ? 'hidden' : 'block'} cursor-pointer`}
+                className={`fixed bottom-4 right-4 p-3 bg-gray-800 text-white rounded-full shadow-lg z-10 transition-transform ${
+                    showThumbnails ? "hidden" : "block"
+                } cursor-pointer`}
                 onClick={() => {
                     setCurrentVideo(null);
                     setShowThumbnails(true);
