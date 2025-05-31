@@ -1,7 +1,9 @@
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Trash, X, Loader2, TriangleAlert } from "lucide-react";
-import { addNotes, getNotes, deleteNotes, editNotes } from "../../api/api"; // Ensure you have these API methods.
+import { addNotes, getNotes, deleteNotes, editNotes } from "../../api/api";
+
+const sections = ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"];
 
 const AdminNotes = () => {
   const [notes, setNotes] = useState(null);
@@ -12,6 +14,25 @@ const AdminNotes = () => {
 
   const noteTitleRef = useRef("");
   const noteLinkRef = useRef("");
+  const [activeSectionForAdd, setActiveSectionForAdd] = useState(null); // which section opened add modal
+
+  // Group notes by section for display (with trimming for safety)
+  const groupedNotes = {};
+  sections.forEach((sec) => (groupedNotes[sec] = []));
+  if (notes) {
+    notes.forEach((note) => {
+      if (
+        note &&
+        note.section &&
+        sections.includes(note.section.trim())
+      ) {
+        const trimmedSection = note.section.trim();
+        groupedNotes[trimmedSection].push(note);
+      } else {
+        console.warn("Note with unknown or invalid section:", note);
+      }
+    });
+  }
 
   const fetchData = async () => {
     try {
@@ -21,6 +42,7 @@ const AdminNotes = () => {
       }
     } catch (error) {
       console.error(error);
+      toast.error("Failed to fetch notes.");
     } finally {
       setLoading(false);
     }
@@ -28,41 +50,28 @@ const AdminNotes = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!activeSectionForAdd) {
+      toast.error("Invalid section for adding note.");
+      return;
+    }
+
     const newNote = {
       noteTitle: noteTitleRef.current.value,
       noteLink: noteLinkRef.current.value,
+      section: activeSectionForAdd,
     };
-  
+
     try {
       const response = await addNotes(newNote);
+      console.log("Add response:", response);
       if (response.status === 201 || response.status === 200) {
         setShowAdd(false);
         toast.success("Note Added");
-  
-        setNotes((prevNotes) => [...prevNotes, response.data]);
+        fetchData(); // fetch fresh list after add
       }
     } catch (error) {
       toast.error("Error while Adding");
       console.error("error while adding", error);
-    }
-  };
-  
-
-  const handleEdit = async (e) => {
-    e.preventDefault();
-    const updatedNote = {
-      noteTitle: noteTitleRef.current.value,
-      noteLink: noteLinkRef.current.value,
-    };
-
-    try {
-      const response = await editNotes(updatedNote, currentNote._id);
-      if (response.status === 200) {
-        setShowEdit(!showEdit);
-        fetchData();
-      }
-    } catch (error) {
-      toast.error("Error while Updating");
     }
   };
 
@@ -70,11 +79,39 @@ const AdminNotes = () => {
     try {
       const response = await deleteNotes(id);
       if (response.status === 200) {
-        console.log("Note deleted");
+        toast.success("Note Deleted");
         fetchData();
       }
     } catch (error) {
-      toast.error("error");
+      toast.error("Error while Deleting");
+      console.error(error);
+    }
+  };
+
+  const handleEditOpen = (note) => {
+    setCurrentNote(note);
+    setShowEdit(true);
+  };
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+
+    const updatedNote = {
+      noteTitle: noteTitleRef.current.value,
+      noteLink: noteLinkRef.current.value,
+      section: currentNote.section,
+    };
+
+    try {
+      const response = await editNotes(updatedNote, currentNote._id);
+      if (response.status === 200) {
+        setShowEdit(false);
+        fetchData();
+        toast.success("Note Updated");
+      }
+    } catch (error) {
+      toast.error("Error while Updating");
+      console.error(error);
     }
   };
 
@@ -100,111 +137,156 @@ const AdminNotes = () => {
   }
 
   return (
-    <div className="w-full flex flex-col justify-start items-start">
-      <div className="w-full flex flex-row justify-between items-center my-4 shadow-md rounded-md p-1 border">
-        <button
-          className="w-10 h-10 font-bold flex justify-center items-center border-2 border-green-500 rounded-md text-green-500 shadow-md hover:text-white hover:bg-green-500 hover:shadow-md"
-          onClick={() => setShowAdd(!showAdd)}
-        >
-          <Plus className="w-8 h-8" />
-        </button>
-      </div>
-      <table className="w-full h-full border-collapse border shadow-lg rounded-md">
-        <thead className="shadow-md font-bold text-orange-500 text-left rounded-md">
-          <tr>
-            <th className="p-6">PID</th>
-            <th className="p-6">Note Title</th>
-            <th className="p-6">Note Link</th>
-            <th className="p-6">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {notes.map((note, index) => (
-            <tr key={index}>
-              <td className="p-4">{note._id}</td>
-              <td className="p-4">{note.noteTitle}</td>
-              <td className="p-4 text-blue-600 underline cursor-pointer">{note.noteLink}</td>
-              <td className="p-4 flex h-full w-full flex-row justify-start items-center gap-4">
-                <button
-                  className="h-15 w-15 border-emerald-500 border-2 p-1 rounded-md text-emerald-500 shadow-md hover:bg-emerald-500 hover:text-white hover:shadow-emerald-500"
-                  onClick={() => {
-                    setCurrentNote(note);
-                    setShowEdit(true);
-                  }}
-                >
-                  <Pencil />
-                </button>
-                <button
-                  className="h-15 w-15 border-red-500 border-2 p-1 rounded-md text-red-500 shadow-md hover:bg-red-500 hover:text-white hover:shadow-red-500"
-                  onClick={() => handleDelete(note._id)}
-                >
-                  <Trash />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="w-full flex flex-col justify-start items-start gap-6">
+      {sections.map((section) => (
+        <div key={section} className="w-full border rounded-md p-4 shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-lime-600">{`Sem ${section}`}</h2>
+
+            {/* Show Add button for EVERY section */}
+            <button
+              className="flex items-center gap-1 border-2 border-green-500 rounded-md px-3 py-1 text-green-500 hover:bg-green-500 hover:text-white"
+              onClick={() => {
+                setActiveSectionForAdd(section);
+                setShowAdd(true);
+              }}
+            >
+              <Plus /> Add Note
+            </button>
+          </div>
+
+          {/* Notes table per section */}
+          {(!groupedNotes[section] || groupedNotes[section].length === 5) ? (
+            <p className="text-gray-500 italic">No notes in this section.</p>
+          ) : (
+            <table className="w-full border-collapse border shadow rounded-md">
+              <thead className="bg-orange-100 text-left font-semibold text-orange-600">
+                <tr>
+                  <th className="p-3 border-b border-orange-300">PID</th>
+                  <th className="p-3 border-b border-orange-300">Note Title</th>
+                  <th className="p-3 border-b border-orange-300">Note Link</th>
+                  <th className="p-3 border-b border-orange-300">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedNotes[section].map((note) => (
+                  <tr key={note._id} className="hover:bg-orange-50">
+                    <td className="p-3 border-b border-orange-300">{note._id}</td>
+                    <td className="p-3 border-b border-orange-300">{note.noteTitle}</td>
+                    <td className="p-3 border-b border-orange-300 text-blue-600 underline cursor-pointer">
+                      <a href={note.noteLink} target="_blank" rel="noreferrer">
+                        {note.noteLink}
+                      </a>
+                    </td>
+                    <td className="p-3 border-b border-orange-300 flex gap-3">
+                      {/* Delete button for all notes */}
+                      <button
+                        onClick={() => handleDelete(note._id)}
+                        className="border-red-500 border-2 p-1 rounded-md text-red-500 shadow-md hover:bg-red-500 hover:text-white hover:shadow-red-500"
+                        title="Delete Note"
+                      >
+                        <Trash />
+                      </button>
+
+                      {/* Edit button */}
+                      <button
+                        onClick={() => handleEditOpen(note)}
+                        className="border-blue-500 border-2 p-1 rounded-md text-blue-500 shadow-md hover:bg-blue-500 hover:text-white hover:shadow-blue-500"
+                        title="Edit Note"
+                      >
+                        <Pencil />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ))}
 
       {/* Add Modal */}
       {showAdd && (
-        <div className="absolute top-0 left-0 z-50 h-screen w-screen flex justify-center items-center bg-black/40 ">
-          <div className="h-[65%] w-1/3 flex flex-col justify-center items-center bg-white shadow-2xl rounded-md">
-            <div className="h-full w-full flex flex-col justify-center items-center text-lg font-semibold">
-              <div className="h-[20%] w-[80%] flex flex-row justify-center items-center">
-                <h1 className="w-1/2 text-left text-xl my-6 font-bold text-green-500">Add Note</h1>
-                <div
-                  className="w-1/2 flex justify-end items-center text-red-500 cursor-pointer"
-                  onClick={() => {
-                    setShowAdd(!showAdd);
-                  }}
-                >
-                  <X className="h-8 w-8 border-2 p-1 border-red-500 rounded-full hover:bg-red-500 hover:text-white" />
-                </div>
-              </div>
-              <form
-                className="h-[90%] w-[80%] flex flex-col justify-center items-center gap-6"
-                onSubmit={handleAdd}
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40">
+          <div className="w-1/3 bg-white rounded-md shadow-2xl p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-green-600">Add Note to Section {activeSectionForAdd}</h2>
+              <button
+                onClick={() => setShowAdd(false)}
+                className="text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1"
               >
-                <input ref={noteTitleRef} type="text" placeholder="Note Title" className="w-full shadow-sm outline-none bg-[#f5f5f7] border-b-2 border-transparent p-2 focus:shadow-lg focus:border-lime-400 rounded-sm" required />
-                <input ref={noteLinkRef} type="text" placeholder="Note Link" className="w-full shadow-sm outline-none bg-[#f5f5f7] border-b-2 border-transparent p-2 focus:shadow-lg focus:border-lime-400 rounded-sm" required />
-                <button type="submit" className="w-full h-[3rem] bg-green-500 text-white rounded-sm shadow-lg hover:shadow-green-400">Add</button>
-              </form>
+                <X size={24} />
+              </button>
             </div>
+            <form onSubmit={handleAdd} className="flex flex-col gap-4">
+              <input
+                ref={noteTitleRef}
+                type="text"
+                placeholder="Note Title"
+                required
+                className="p-2 border rounded shadow-sm outline-none focus:border-green-500"
+              />
+              <input
+                ref={noteLinkRef}
+                type="url"
+                placeholder="Note Link"
+                required
+                className="p-2 border rounded shadow-sm outline-none focus:border-green-500"
+              />
+              <button
+                type="submit"
+                className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
+              >
+                Add Note
+              </button>
+            </form>
           </div>
         </div>
       )}
 
       {/* Edit Modal */}
-      {showEdit && (
-        <div className="absolute top-0 left-0 z-50 h-screen w-screen flex justify-center items-center bg-black/40 ">
-          <div className="h-[75%] w-1/3 flex flex-col justify-center items-center bg-white shadow-2xl rounded-md">
-            <div className="h-full w-full flex flex-col justify-center items-center text-lg font-semibold">
-              <div className="h-[20%] w-[80%] flex flex-row justify-center items-center">
-                <h1 className="w-1/2 text-left text-xl my-6 font-bold text-blue-500">Edit Note</h1>
-                <div
-                  className="w-1/2 flex justify-end items-center text-red-500 cursor-pointer"
-                  onClick={() => {
-                    setShowEdit(!showEdit);
-                  }}
-                >
-                  <X className="h-8 w-8 border-2 p-1 border-red-500 rounded-full hover:bg-red-500 hover:text-white" />
-                </div>
-              </div>
-              <form
-                className="h-[75%] w-[80%] flex flex-col justify-center items-center gap-8"
-                onSubmit={handleEdit}
+      {showEdit && currentNote && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40">
+          <div className="w-1/3 bg-white rounded-md shadow-2xl p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-blue-600">Edit Note</h2>
+              <button
+                onClick={() => setShowEdit(false)}
+                className="text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1"
               >
-                <input ref={noteTitleRef} type="text" placeholder="Note Title" defaultValue={currentNote.noteTitle} className="w-full shadow-sm outline-none bg-[#f5f5f7] border-b-2 border-transparent p-4 focus:shadow-lg focus:border-blue-400 rounded-sm" required />
-                <input ref={noteLinkRef} type="text" placeholder="Note Link" defaultValue={currentNote.noteLink} className="w-full shadow-sm outline-none bg-[#f5f5f7] border-b-2 border-transparent p-4 focus:shadow-lg focus:border-blue-400 rounded-sm" required />
-                <button type="submit" className="w-full h-[3rem] bg-blue-500 text-white rounded-sm shadow-lg hover:shadow-blue-400">Save</button>
-              </form>
+                <X size={24} />
+              </button>
             </div>
+            <form onSubmit={handleEdit} className="flex flex-col gap-4">
+              <input
+                ref={noteTitleRef}
+                defaultValue={currentNote.noteTitle}
+                type="text"
+                placeholder="Note Title"
+                required
+                className="p-2 border rounded shadow-sm outline-none focus:border-blue-500"
+              />
+              <input
+                ref={noteLinkRef}
+                defaultValue={currentNote.noteLink}
+                type="url"
+                placeholder="Note Link"
+                required
+                className="p-2 border rounded shadow-sm outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+              >
+                Save Changes
+              </button>
+            </form>
           </div>
         </div>
       )}
     </div>
   );
 };
+
 
 export default AdminNotes;

@@ -20,6 +20,7 @@ import RedirectCleanHash from "./components/RedirectCleanHash";
 
 import Login from "./Pages/routes/login";
 import Signup from "./Pages/routes/signup";
+import VideoCourse from "./components/VideoCard/VideoCard";
 
 const App = () => {
   return (
@@ -38,6 +39,8 @@ const App = () => {
             <Route element={<WebLayout />}>
               <Route index element={<Hero />} />
               <Route path="courses" element={<Courses />} />
+          
+              <Route path="/video/:id" element={<VideoCourse />} />
               <Route path="notes" element={<Notes />} />
               <Route path="chatbot" element={<Chatbot />} />
               <Route path="contact" element={<Contact />} />

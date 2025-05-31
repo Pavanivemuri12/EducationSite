@@ -2,11 +2,18 @@ const express = require("express");
 const router = express.Router();
 const Note = require("../models/notes");
 
-// Create a new note
+// Create a new note (with section)
 router.post("/add", async (req, res) => {
   try {
-    const { noteTitle, noteLink } = req.body;
-    const note = new Note({ noteTitle, noteLink });
+    const { noteTitle, noteLink, section } = req.body;
+
+    if (!noteTitle || !noteLink || !section) {
+      return res.status(400).json({ error: "noteTitle, noteLink and section are required" });
+    }
+
+    // Optional: validate section value here (e.g. check against allowed sections)
+
+    const note = new Note({ noteTitle, noteLink, section });
     await note.save();
     res.status(201).json(note);
   } catch (error) {
@@ -24,18 +31,27 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Edit a note by ID
+// Edit a note by ID (include section update)
 router.put("/edit/:id", async (req, res) => {
   try {
-    const { noteTitle, noteLink } = req.body;
+    const { noteTitle, noteLink, section } = req.body;
+
+    if (!noteTitle || !noteLink || !section) {
+      return res.status(400).json({ error: "noteTitle, noteLink and section are required" });
+    }
+
+    // Optional: validate section value here
+
     const updatedNote = await Note.findByIdAndUpdate(
       req.params.id,
-      { noteTitle, noteLink },
+      { noteTitle, noteLink, section },
       { new: true }
     );
+
     if (!updatedNote) {
       return res.status(404).json({ message: "Note not found" });
     }
+
     res.status(200).json({ message: "Note updated successfully", updatedNote });
   } catch (error) {
     res.status(500).json({ error: "Failed to update note" });
