@@ -1,12 +1,14 @@
-import { NavLink } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { IoMdMenu } from "react-icons/io";
 import { motion } from "framer-motion";
+import { SignedIn, SignedOut, SignInButton, UserButton ,useUser} from "@clerk/clerk-react";
 //import Courses from "../../Pages/Courses";
 
 
 const Navbar = () => {
     
-
+  const { user } = useUser();
+const navigate = useNavigate();
 const NavbarMenu = [
     {
         id:1,
@@ -35,7 +37,14 @@ const NavbarMenu = [
     },
 
 ];
-
+ const handleTeacherModeClick = () => {
+    if (user?.publicMetadata?.role === "admin") {
+      navigate("/");
+      alert("Back to StudentSphere(Student Page).");
+    } else {
+      alert("Access denied. You are not an admin.");
+    }
+  };
   return (
     <nav className="relative z-20">
         <motion.div
@@ -45,7 +54,7 @@ const NavbarMenu = [
             {/* Logo section */}
             <div>
                 <h1 className="font-bold text-2xl">
-                    CSE WEB
+                    CSE WEB (Admin)
                 </h1>
             </div>
             {/* Menu section */}
@@ -68,7 +77,25 @@ const NavbarMenu = [
     </li>
   ))
 }
-                    <button className="primary-btn">Sign In</button>
+ <SignedIn>
+            <button
+              onClick={handleTeacherModeClick}
+              className="primary-btn w-29 h-8 flex items-center justify-center"
+            >
+              Student Mode
+            </button>
+          </SignedIn>
+                    <div>
+            <SignedOut>
+              <SignInButton>
+                <button className="primary-btn">Sign In</button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+          </div>
+        
                 </ul>
 
             </div>
