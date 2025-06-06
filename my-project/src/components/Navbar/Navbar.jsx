@@ -1,7 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { IoMdMenu } from "react-icons/io";
 import { motion } from "framer-motion";
-import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+  useUser,
+} from "@clerk/clerk-react";
 
 const Navbar = () => {
   const NavbarMenu = [
@@ -15,11 +21,10 @@ const Navbar = () => {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  // Handler for Teacher mode button click
   const handleTeacherModeClick = () => {
     if (user?.publicMetadata?.role === "admin") {
       navigate("/admin");
-      alert("Welcome to StudentSphere Admin Page.")
+      alert("Welcome to StudentSphere Admin Page.");
     } else {
       alert("Access denied. You are not an admin.");
     }
@@ -32,12 +37,12 @@ const Navbar = () => {
         animate={{ opacity: 1, y: 0 }}
         className="container py-10 flex justify-between items-center"
       >
-        {/* Logo section */}
+        {/* Logo */}
         <div>
           <h1 className="font-bold text-2xl">CSE WEB</h1>
         </div>
 
-        {/* Menu section */}
+        {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-5">
           <ul className="flex items-center gap-5">
             {NavbarMenu.map((menu) => (
@@ -45,19 +50,20 @@ const Navbar = () => {
                 <NavLink
                   to={menu.path}
                   className={({ isActive }) =>
-                    `inline-block py-2 px-3 relative group ${
-                      isActive ? "text-secondary" : "hover:text-secondary"
+                    `inline-block py-2 px-3 relative no-underline transition-colors duration-300 ${
+                      isActive
+                        ? "text-secondary font-semibold"
+                        : "text-gray-700 hover:text-secondary"
                     }`
                   }
                 >
-                  <div className="w-2 h-2 bg-secondary absolute mt-2 rounded-full left-1/2 -translate-x-1/2 top-1/2 bottom-0 hidden group-hover:block"></div>
                   {menu.title}
                 </NavLink>
               </li>
             ))}
           </ul>
 
-          {/* Teacher mode button - only visible if user is signed in */}
+          {/* Teacher mode button */}
           <SignedIn>
             <button
               onClick={handleTeacherModeClick}
@@ -67,7 +73,7 @@ const Navbar = () => {
             </button>
           </SignedIn>
 
-          {/* Clerk Sign In / User Button */}
+          {/* Sign In / User Icon */}
           <div>
             <SignedOut>
               <SignInButton>
@@ -80,7 +86,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Hamburger menu section */}
+        {/* Mobile Menu Icon */}
         <div className="lg:hidden">
           <IoMdMenu className="text-4xl" />
         </div>
