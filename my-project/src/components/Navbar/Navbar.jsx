@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { IoMdMenu } from "react-icons/io";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   SignedIn,
   SignedOut,
@@ -8,8 +9,11 @@ import {
   UserButton,
   useUser,
 } from "@clerk/clerk-react";
+import { TbCube3dSphere } from "react-icons/tb";
 
 const Navbar = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const NavbarMenu = [
     { id: 1, title: "Home", path: "/" },
     { id: 2, title: "Courses", path: "/Courses" },
@@ -35,11 +39,14 @@ const Navbar = () => {
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
-        className="container py-10 flex justify-between items-center"
+        className="container py-6 px-4 flex justify-between items-center"
       >
         {/* Logo */}
         <div>
-          <h1 className="font-bold text-2xl">CSE WEB</h1>
+          <h1 className="font-bold text-3xl flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-600 bg-clip-text text-transparent">
+            <TbCube3dSphere className="text-orange-600" />
+            STUDENT SPHERE
+          </h1>
         </div>
 
         {/* Desktop Menu */}
@@ -50,7 +57,7 @@ const Navbar = () => {
                 <NavLink
                   to={menu.path}
                   className={({ isActive }) =>
-                    `inline-block py-2 px-3 relative no-underline transition-colors duration-300 ${
+                    `inline-block py-2 px-3 transition duration-300 ${
                       isActive
                         ? "text-secondary font-semibold"
                         : "text-gray-700 hover:text-secondary"
@@ -63,7 +70,7 @@ const Navbar = () => {
             ))}
           </ul>
 
-          {/* Teacher mode button */}
+          {/* Teacher Mode Button */}
           <SignedIn>
             <button
               onClick={handleTeacherModeClick}
@@ -73,7 +80,7 @@ const Navbar = () => {
             </button>
           </SignedIn>
 
-          {/* Sign In / User Icon */}
+          {/* Auth Buttons */}
           <div>
             <SignedOut>
               <SignInButton>
@@ -86,11 +93,63 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Icon */}
+        {/* Mobile Menu Toggle Button */}
         <div className="lg:hidden">
-          <IoMdMenu className="text-4xl" />
+          <button onClick={() => setMenuOpen((prev) => !prev)}>
+            <IoMdMenu className="text-4xl text-gray-800" />
+          </button>
         </div>
       </motion.div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="lg:hidden bg-white shadow-md rounded-xl mx-4 mt-2 p-4 space-y-4"
+          >
+            {NavbarMenu.map((menu) => (
+              <NavLink
+                key={menu.id}
+                to={menu.path}
+                onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block py-2 px-3 rounded-md transition ${
+                    isActive
+                      ? "bg-orange-100 text-orange-600 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`
+                }
+              >
+                {menu.title}
+              </NavLink>
+            ))}
+
+            <SignedIn>
+              <button
+                onClick={() => {
+                  handleTeacherModeClick();
+                  setMenuOpen(false);
+                }}
+                className="w-full text-left py-2 px-3 text-gray-800 hover:bg-gray-100 rounded-md"
+              >
+                Teacher mode
+              </button>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+
+            <SignedOut>
+              <SignInButton>
+                <button className="w-full text-left py-2 px-3 text-gray-800 hover:bg-gray-100 rounded-md">
+                  Sign In
+                </button>
+              </SignInButton>
+            </SignedOut>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

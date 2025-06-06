@@ -42,7 +42,7 @@ const Hero = () => {
               variants={FadeUp(0.6)}
               initial="initial"
               animate="animate"
-              className="text-3xl lg:text-5xl font-bold !leading-snug"
+              className="text-3xl lg:text-4xl font-bold !leading-snug"
             >
               Let&apos;s Learn and get the{" "}
               <span className="text-secondary">best results </span>through smart

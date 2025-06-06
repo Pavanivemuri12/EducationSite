@@ -8,8 +8,8 @@ import Contact from "./Pages/Contact";
 import AdminCourses from "./Pages/Admin/AdminCourses";
 import AdminHero from "./components/Admin/AdminHero";
 import AdminNotes from "./Pages/Admin/AdminNotes";
-import AdminChatbot from "./Pages/Admin/AdminChatbot";
-import AdminContact from "./Pages/Admin/AdminContact";
+//import AdminChatbot from "./Pages/Admin/AdminChatbot";
+//import AdminContact from "./Pages/Admin/AdminContact";
 
 import WebLayout from "./Layout/WebLayout";
 import AdminLayout from "./Layout/AdminLayout";
@@ -52,8 +52,8 @@ const App = () => {
               <Route index element={<AdminHero />} />
               <Route path="courses" element={<AdminCourses />} />
               <Route path="notes" element={<AdminNotes />} />
-              <Route path="chatbot" element={<AdminChatbot />} />
-              <Route path="contact" element={<AdminContact />} />
+              {/* <Route path="chatbot" element={<AdminChatbot />} />
+              <Route path="contact" element={<AdminContact />} /> */}
             </Route>
           </Route>
         </Routes>

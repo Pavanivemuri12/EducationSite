@@ -16,16 +16,12 @@ const AdminNotes = () => {
   const noteLinkRef = useRef("");
   const [activeSectionForAdd, setActiveSectionForAdd] = useState(null); // which section opened add modal
 
-  // Group notes by section for display (with trimming for safety)
+  // Group notes by section for display
   const groupedNotes = {};
   sections.forEach((sec) => (groupedNotes[sec] = []));
   if (notes) {
     notes.forEach((note) => {
-      if (
-        note &&
-        note.section &&
-        sections.includes(note.section.trim())
-      ) {
+      if (note && note.section && sections.includes(note.section.trim())) {
         const trimmedSection = note.section.trim();
         groupedNotes[trimmedSection].push(note);
       } else {
@@ -63,11 +59,10 @@ const AdminNotes = () => {
 
     try {
       const response = await addNotes(newNote);
-      console.log("Add response:", response);
       if (response.status === 201 || response.status === 200) {
         setShowAdd(false);
         toast.success("Note Added");
-        fetchData(); // fetch fresh list after add
+        fetchData();
       }
     } catch (error) {
       toast.error("Error while Adding");
@@ -131,7 +126,7 @@ const AdminNotes = () => {
     return (
       <div className="w-screen h-[90vh] flex flex-col justify-center items-center">
         <TriangleAlert className="text-orange-400 h-12 w-12" />
-        <p>No Notes Available !</p>
+        <p>No Notes Available!</p>
       </div>
     );
   }
@@ -143,7 +138,7 @@ const AdminNotes = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-lime-600">{`Sem ${section}`}</h2>
 
-            {/* Show Add button for EVERY section */}
+            {/* Show Add button for every section */}
             <button
               className="flex items-center gap-1 border-2 border-green-500 rounded-md px-3 py-1 text-green-500 hover:bg-green-500 hover:text-white"
               onClick={() => {
@@ -155,65 +150,67 @@ const AdminNotes = () => {
             </button>
           </div>
 
-          {/* Notes table per section */}
-          {(!groupedNotes[section] || groupedNotes[section].length === 5) ? (
+          {/* Notes table per section with horizontal scroll on small screens */}
+          {(!groupedNotes[section] || groupedNotes[section].length === 0) ? (
             <p className="text-gray-500 italic">No notes in this section.</p>
           ) : (
-            <table className="w-full border-collapse border shadow rounded-md">
-              <thead className="bg-orange-100 text-left font-semibold text-orange-600">
-                <tr>
-                  <th className="p-3 border-b border-orange-300">PID</th>
-                  <th className="p-3 border-b border-orange-300">Note Title</th>
-                  <th className="p-3 border-b border-orange-300">Note Link</th>
-                  <th className="p-3 border-b border-orange-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupedNotes[section].map((note) => (
-                  <tr key={note._id} className="hover:bg-orange-50">
-                    <td className="p-3 border-b border-orange-300">{note._id}</td>
-                    <td className="p-3 border-b border-orange-300">{note.noteTitle}</td>
-                    <td className="p-3 border-b border-orange-300 text-blue-600 underline cursor-pointer">
-                      <a href={note.noteLink} target="_blank" rel="noreferrer">
-                        {note.noteLink}
-                      </a>
-                    </td>
-                    <td className="p-3 border-b border-orange-300 flex gap-3">
-                      {/* Delete button for all notes */}
-                      <button
-                        onClick={() => handleDelete(note._id)}
-                        className="border-red-500 border-2 p-1 rounded-md text-red-500 shadow-md hover:bg-red-500 hover:text-white hover:shadow-red-500"
-                        title="Delete Note"
-                      >
-                        <Trash />
-                      </button>
-
-                      {/* Edit button */}
-                      <button
-                        onClick={() => handleEditOpen(note)}
-                        className="border-blue-500 border-2 p-1 rounded-md text-blue-500 shadow-md hover:bg-blue-500 hover:text-white hover:shadow-blue-500"
-                        title="Edit Note"
-                      >
-                        <Pencil />
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] border-collapse border shadow rounded-md">
+                <thead className="bg-orange-100 text-left font-semibold text-orange-600">
+                  <tr>
+                    <th className="p-3 border-b border-orange-300">PID</th>
+                    <th className="p-3 border-b border-orange-300">Note Title</th>
+                    <th className="p-3 border-b border-orange-300">Note Link</th>
+                    <th className="p-3 border-b border-orange-300">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {groupedNotes[section].map((note) => (
+                    <tr key={note._id} className="hover:bg-orange-50">
+                      <td className="p-3 border-b border-orange-300 break-all">{note._id}</td>
+                      <td className="p-3 border-b border-orange-300">{note.noteTitle}</td>
+                      <td className="p-3 border-b border-orange-300 text-blue-600 underline cursor-pointer break-all">
+                        <a href={note.noteLink} target="_blank" rel="noreferrer">
+                          {note.noteLink}
+                        </a>
+                      </td>
+                      <td className="p-3 border-b border-orange-300 flex gap-3">
+                        <button
+                          onClick={() => handleDelete(note._id)}
+                          className="border-red-500 border-2 p-1 rounded-md text-red-500 shadow-md hover:bg-red-500 hover:text-white hover:shadow-red-500"
+                          title="Delete Note"
+                        >
+                          <Trash />
+                        </button>
+                        <button
+                          onClick={() => handleEditOpen(note)}
+                          className="border-blue-500 border-2 p-1 rounded-md text-blue-500 shadow-md hover:bg-blue-500 hover:text-white hover:shadow-blue-500"
+                          title="Edit Note"
+                        >
+                          <Pencil />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       ))}
 
       {/* Add Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40">
-          <div className="w-1/3 bg-white rounded-md shadow-2xl p-6 flex flex-col">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-md shadow-2xl p-6 flex flex-col overflow-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-green-600">Add Note to Section {activeSectionForAdd}</h2>
+              <h2 className="text-xl font-bold text-green-600">
+                Add Note to Section {activeSectionForAdd}
+              </h2>
               <button
                 onClick={() => setShowAdd(false)}
                 className="text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1"
+                aria-label="Close Add Note Modal"
               >
                 <X size={24} />
               </button>
@@ -231,7 +228,7 @@ const AdminNotes = () => {
                 type="url"
                 placeholder="Note Link"
                 required
-                className="p-2 border rounded shadow-sm outline-none focus:border-green-500"
+                className="p-2 border rounded shadow-sm outline-none focus:border-green-500 break-words"
               />
               <button
                 type="submit"
@@ -246,13 +243,14 @@ const AdminNotes = () => {
 
       {/* Edit Modal */}
       {showEdit && currentNote && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40">
-          <div className="w-1/3 bg-white rounded-md shadow-2xl p-6 flex flex-col">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-md shadow-2xl p-6 flex flex-col overflow-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-blue-600">Edit Note</h2>
               <button
                 onClick={() => setShowEdit(false)}
                 className="text-red-500 hover:bg-red-500 hover:text-white rounded-full p-1"
+                aria-label="Close Edit Note Modal"
               >
                 <X size={24} />
               </button>
@@ -272,7 +270,7 @@ const AdminNotes = () => {
                 type="url"
                 placeholder="Note Link"
                 required
-                className="p-2 border rounded shadow-sm outline-none focus:border-blue-500"
+                className="p-2 border rounded shadow-sm outline-none focus:border-blue-500 break-words"
               />
               <button
                 type="submit"
@@ -287,6 +285,5 @@ const AdminNotes = () => {
     </div>
   );
 };
-
 
 export default AdminNotes;
